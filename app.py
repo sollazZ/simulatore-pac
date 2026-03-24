@@ -28,7 +28,8 @@ with st.sidebar:
         plot_text_color = "#1d1d1f"
         plot_grid_color = "#dcdcdc"
         css_theme_logic = """
-        .stApp { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); }
+        /* Sfondo BIANCO SOLIDO per il tema chiaro */
+        .stApp { background-color: #FFFFFF; color: #1d1d1f; }
         [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.4) !important; backdrop-filter: blur(12px); }
         [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.5); }
         /* Forza il colore e i grassetti per il tema chiaro */
@@ -116,12 +117,10 @@ st.title(f"📈 {nome_piano}")
 st.subheader("Crescita del Capitale Netto")
 fig_line = px.line(
     df, x="Anno", y=["V. Netto", "Potere Acq.", "Versato"], 
-    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'], 
+    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'], # Verde, Rosso, Blu Apple
     labels={"value": "<b>Euro (€)</b>", "variable": "<b>Legenda</b>"}
 )
 fig_line.update_traces(line=dict(width=4)) 
-
-# Trasforma i nomi delle linee in grassetto
 fig_line.for_each_trace(lambda t: t.update(name=f"<b>{t.name}</b>"))
 
 fig_line.update_layout(
@@ -142,11 +141,12 @@ with col1:
     totale_versato = df["Versato"].iloc[-1]
     totale_interessi_netti = df["V. Netto"].iloc[-1] - totale_versato
     
+    # GRAFICO A TORTA CON I NUOVI COLORI: BLU E GIALLO
     fig_pie = px.pie(
         values=[totale_versato, totale_interessi_netti], 
-        # Nomi delle fette in grassetto
         names=['<b>Capitale Versato</b>', '<b>Interessi Netti</b>'],
-        color_discrete_sequence=['#007aff', '#34c759']
+        # Sequenza colori: [Versato (Blu iOS), Interessi (Giallo iOS)]
+        color_discrete_sequence=['#007aff', '#ffcc00']
     )
     pie_border_color = "#ffffff" if tema == "Scuro" else plot_text_color
     fig_pie.update_traces(marker=dict(line=dict(color=pie_border_color, width=2)))
@@ -160,7 +160,6 @@ with col1:
     st.plotly_chart(fig_pie, use_container_width=True)
 
 with col2:
-    # I valori metrici saranno in grassetto grazie al CSS inserito sopra
     st.metric("Valore Netto Finale", f"€ {int(df['V. Netto'].iloc[-1]):,}".replace(",", "."))
     
     perdita_inflazione = df['V. Netto'].iloc[-1] - df['Potere Acq.'].iloc[-1]
@@ -183,7 +182,6 @@ df_display.set_index("Anno", inplace=True)
 for col in ["Versato", "V. Netto", "Potere Acq."]:
     df_display[col] = df_display[col].apply(lambda x: f"€ {int(x):,}").str.replace(",", ".")
 
-# La tabella rimane compatta senza scorrimento orizzontale
 st.table(df_display)
 
 csv = df.to_csv(index=False).encode('utf-8')
