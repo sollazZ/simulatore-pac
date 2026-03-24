@@ -5,69 +5,48 @@ import plotly.express as px
 # --- CONFIGURAZIONE PAGINA E TEMA ---
 st.set_page_config(page_title="Simulatore PAC Apple Style", layout="centered")
 
-# --- INPUT UTENTE CON EFFETTO LIQUID GLASS ---
+# --- INPUT UTENTE CON EFFETTO LIQUID GLASS E COLORI CORRETTI ---
 with st.sidebar:
     st.header("🎨 Stile (Liquid Glass)")
     tema = st.radio("Tema Visivo", ["Scuro", "Chiaro"])
     
-    # Iniezione CSS avanzata per l'effetto Glassmorphism
+    # CSS avanzato per l'effetto Glassmorphism e gestione dei colori del testo
     if tema == "Chiaro":
         st.markdown("""
         <style>
-        /* Sfondo principale a gradiente morbido */
-        .stApp {
-            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-            color: #1d1d1f;
-        }
-        /* Sidebar semitrasparente con sfocatura */
-        [data-testid="stSidebar"] {
-            background-color: rgba(255, 255, 255, 0.4) !important;
-            backdrop-filter: blur(12px);
-        }
-        /* Riquadri delle metriche arrotondati e vetrosi */
-        [data-testid="metric-container"] {
-            background-color: rgba(255, 255, 255, 0.6);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
+        .stApp { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); }
+        [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.4) !important; backdrop-filter: blur(12px); }
+        [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.5); }
+        /* Forza il colore scuro per il testo sul tema chiaro */
+        h1, h2, h3, h4, h5, h6, p, span, label, div[data-testid="stMetricValue"], th, td { color: #1d1d1f !important; }
         </style>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <style>
-        .stApp {
-            background: linear-gradient(135deg, #141E30 0%, #243B55 100%);
-            color: #f5f5f7;
-        }
-        [data-testid="stSidebar"] {
-            background-color: rgba(0, 0, 0, 0.25) !important;
-            backdrop-filter: blur(12px);
-        }
-        [data-testid="metric-container"] {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        .stApp { background: linear-gradient(135deg, #141E30 0%, #243B55 100%); }
+        [data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.25) !important; backdrop-filter: blur(12px); }
+        [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255, 255, 255, 0.1); }
+        /* Forza il colore chiaro per il testo sul tema scuro */
+        h1, h2, h3, h4, h5, h6, p, span, label, div[data-testid="stMetricValue"], th, td { color: #f5f5f7 !important; }
         </style>
         """, unsafe_allow_html=True)
 
     st.header("⚙️ Parametri Base")
     capitale_iniziale = st.number_input("Capitale di partenza (€)", min_value=0, value=0, step=1000)
     mensile = st.number_input("Importo PAC iniziale (€/mese)", min_value=10, value=100, step=10)
-    anni = st.slider("Durata in anni", 1, 40, 10)
-    rendimento_annuo = st.slider("Rendimento annuo stimato (%)", 0.0, 15.0, 7.0) / 100
+    
+    # Sostituiti gli slider con input numerici dotati di + e -
+    anni = st.number_input("Durata (Anni)", min_value=1, max_value=50, value=10, step=1)
+    rendimento_annuo = st.number_input("Rendimento annuo stimato (%)", min_value=0.0, max_value=20.0, value=7.0, step=0.1) / 100
 
     with st.expander("🔄 Modifiche PAC (Max 3)"):
         c1, c2 = st.columns(2)
-        anno_m1 = c1.number_input("Da Anno (A)", min_value=0, max_value=anni, value=0)
+        anno_m1 = c1.number_input("Da Anno (A)", min_value=0, max_value=int(anni), value=0)
         imp_m1 = c2.number_input("Nuovo Imp. A", min_value=0, value=0, step=10)
-        anno_m2 = c1.number_input("Da Anno (B)", min_value=0, max_value=anni, value=0)
+        anno_m2 = c1.number_input("Da Anno (B)", min_value=0, max_value=int(anni), value=0)
         imp_m2 = c2.number_input("Nuovo Imp. B", min_value=0, value=0, step=10)
-        anno_m3 = c1.number_input("Da Anno (C)", min_value=0, max_value=anni, value=0)
+        anno_m3 = c1.number_input("Da Anno (C)", min_value=0, max_value=int(anni), value=0)
         imp_m3 = c2.number_input("Nuovo Imp. C", min_value=0, value=0, step=10)
 
         pac_changes = {}
@@ -77,9 +56,9 @@ with st.sidebar:
 
     with st.expander("💰 Versamenti Extra"):
         c3, c4 = st.columns(2)
-        anno_ex1 = c3.number_input("Anno Extra 1", min_value=0, max_value=anni, value=0)
+        anno_ex1 = c3.number_input("Anno Extra 1", min_value=0, max_value=int(anni), value=0)
         imp_ex1 = c4.number_input("Importo 1 (€)", min_value=0, value=0, step=1000)
-        anno_ex2 = c3.number_input("Anno Extra 2", min_value=0, max_value=anni, value=0)
+        anno_ex2 = c3.number_input("Anno Extra 2", min_value=0, max_value=int(anni), value=0)
         imp_ex2 = c4.number_input("Importo 2 (€)", min_value=0, value=0, step=1000)
 
         lump_sums = {}
@@ -87,8 +66,9 @@ with st.sidebar:
         if anno_ex2 > 0: lump_sums[anno_ex2] = imp_ex2
 
     st.header("📈 Macro e Fiscali")
-    inflazione_annua = st.slider("Inflazione annua attesa (%)", 0.0, 10.0, 2.0) / 100
-    tassazione = st.slider("Tassazione plusvalenze (%)", 0.0, 30.0, 26.0) / 100
+    # Sostituiti gli slider con input numerici dotati di + e -
+    inflazione_annua = st.number_input("Inflazione annua attesa (%)", min_value=0.0, max_value=15.0, value=2.0, step=0.1) / 100
+    tassazione = st.number_input("Tassazione plusvalenze (%)", min_value=0.0, max_value=50.0, value=26.0, step=0.1) / 100
 
 # --- CALCOLI ---
 tasso_mensile = (1 + rendimento_annuo) ** (1/12) - 1
@@ -97,7 +77,7 @@ capitale_versato = capitale_iniziale
 valore_nominale = capitale_iniziale
 pac_corrente = mensile
 
-for anno in range(1, anni + 1):
+for anno in range(1, int(anni) + 1):
     if anno in pac_changes:
         pac_corrente = pac_changes[anno]
     if anno in lump_sums:
@@ -115,7 +95,7 @@ for anno in range(1, anni + 1):
     
     dati_annuali.append({
         "Anno": anno,
-        "Versato": valore_netto - plusvalenza + tasse, # Logica per rintracciare il puro capitale inserito
+        "Versato": valore_netto - plusvalenza + tasse,
         "V. Netto": valore_netto,
         "Potere Acq.": valore_reale_netto
     })
@@ -128,10 +108,9 @@ st.title("📈 Simulatore PAC")
 st.subheader("Crescita del Capitale Netto")
 fig_line = px.line(
     df, x="Anno", y=["V. Netto", "Potere Acq.", "Versato"], 
-    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'] # Colori stile Apple iOS
+    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'] 
 )
 fig_line.update_traces(line=dict(width=4)) 
-# Rende lo sfondo del grafico trasparente per mostrare il liquid glass dietro
 fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -148,7 +127,6 @@ with col1:
         color_discrete_sequence=['#007aff', '#34c759']
     )
     fig_pie.update_traces(marker=dict(line=dict(color='#000000', width=2)))
-    # Sfondo trasparente anche per la torta
     fig_pie.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig_pie, use_container_width=True)
 
@@ -169,21 +147,21 @@ with col2:
 # --- TABELLA FORMATTATA E DOWNLOAD ---
 st.subheader("Andamento Anno per Anno")
 
-# Creiamo una copia del DataFrame solo per l'estetica della tabella
 df_display = df.copy()
 
-# Togliamo i decimali e aggiungiamo l'euro a ogni colonna finanziaria
+# Impostiamo esplicitamente l'Anno come indice della tabella. 
+# Questo rimuove la colonna "0, 1, 2..." fastidiosa e rende la tabella molto più pulita.
+df_display.set_index("Anno", inplace=True)
+
 for col in ["Versato", "V. Netto", "Potere Acq."]:
     df_display[col] = df_display[col].apply(lambda x: f"€ {int(x):,}").str.replace(",", ".")
 
-# Mostriamo la tabella compatta (nessuno scorrimento orizzontale richiesto)
 st.table(df_display)
 
-# Il download mantiene i dati intatti (df originale con i decimali)
 csv = df.to_csv(index=False).encode('utf-8')
 st.download_button(
     label="📥 Scarica i dati in CSV",
     data=csv,
-    file_name='simulazione_pac_apple_style.csv',
+    file_name='simulazione_pac_precisa.csv',
     mime='text/csv',
 )
