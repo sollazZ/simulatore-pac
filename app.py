@@ -10,6 +10,10 @@ with st.sidebar:
     st.header("🎨 Stile (Liquid Glass)")
     tema = st.radio("Tema Visivo", ["Scuro", "Chiaro"])
     
+    # Colori di base per i grafici dipendenti dal tema
+    plot_text_color = "#f5f5f7" if tema == "Scuro" else "#1d1d1f"
+    plot_grid_color = "rgba(255, 255, 255, 0.1)" if tema == "Scuro" else "rgba(0, 0, 0, 0.1)"
+
     # CSS avanzato per l'effetto Glassmorphism e gestione dei colori del testo
     if tema == "Chiaro":
         st.markdown("""
@@ -17,17 +21,18 @@ with st.sidebar:
         .stApp { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); }
         [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.4) !important; backdrop-filter: blur(12px); }
         [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.5); }
-        /* Forza il colore scuro per il testo sul tema chiaro */
+        /* Forza il colore scuro per il testo Streamlit sul tema chiaro */
         h1, h2, h3, h4, h5, h6, p, span, label, div[data-testid="stMetricValue"], th, td { color: #1d1d1f !important; }
         </style>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <style>
-        .stApp { background: linear-gradient(135deg, #141E30 0%, #243B55 100%); }
-        [data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.25) !important; backdrop-filter: blur(12px); }
-        [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255, 255, 255, 0.1); }
-        /* Forza il colore chiaro per il testo sul tema scuro */
+        /* Sfondo NERO PURO per il tema scuro */
+        .stApp { background-color: #000000; color: #f5f5f7; }
+        [data-testid="stSidebar"] { background-color: rgba(20, 20, 20, 0.6) !important; backdrop-filter: blur(12px); border-right: 1px solid rgba(255,255,255,0.1); }
+        [data-testid="metric-container"] { background-color: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.1); }
+        /* Forza il colore chiaro per il testo Streamlit sul tema scuro */
         h1, h2, h3, h4, h5, h6, p, span, label, div[data-testid="stMetricValue"], th, td { color: #f5f5f7 !important; }
         </style>
         """, unsafe_allow_html=True)
@@ -36,7 +41,6 @@ with st.sidebar:
     capitale_iniziale = st.number_input("Capitale di partenza (€)", min_value=0, value=0, step=1000)
     mensile = st.number_input("Importo PAC iniziale (€/mese)", min_value=10, value=100, step=10)
     
-    # Sostituiti gli slider con input numerici dotati di + e -
     anni = st.number_input("Durata (Anni)", min_value=1, max_value=50, value=10, step=1)
     rendimento_annuo = st.number_input("Rendimento annuo stimato (%)", min_value=0.0, max_value=20.0, value=7.0, step=0.1) / 100
 
@@ -66,7 +70,6 @@ with st.sidebar:
         if anno_ex2 > 0: lump_sums[anno_ex2] = imp_ex2
 
     st.header("📈 Macro e Fiscali")
-    # Sostituiti gli slider con input numerici dotati di + e -
     inflazione_annua = st.number_input("Inflazione annua attesa (%)", min_value=0.0, max_value=15.0, value=2.0, step=0.1) / 100
     tassazione = st.number_input("Tassazione plusvalenze (%)", min_value=0.0, max_value=50.0, value=26.0, step=0.1) / 100
 
@@ -108,10 +111,20 @@ st.title("📈 Simulatore PAC")
 st.subheader("Crescita del Capitale Netto")
 fig_line = px.line(
     df, x="Anno", y=["V. Netto", "Potere Acq.", "Versato"], 
-    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'] 
+    color_discrete_sequence=['#34c759', '#ff3b30', '#007aff'],
+    labels={"value": "Euro (€)", "variable": "Legenda"}
 )
 fig_line.update_traces(line=dict(width=4)) 
-fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+
+# Gestione dinamica del tema nei grafici Plotly
+fig_line.update_layout(
+    paper_bgcolor="rgba(0,0,0,0)", # Sfondo trasparente
+    plot_bgcolor="rgba(0,0,0,0)",  # Area grafico trasparente
+    font_color=plot_text_color,     # Colore testo dinamico (chiaro/scuro)
+    xaxis=dict(showgrid=True, gridcolor=plot_grid_color), # Griglia dinamica
+    yaxis=dict(showgrid=True, gridcolor=plot_grid_color),
+    legend=dict(bgcolor="rgba(0,0,0,0)") # Sfondo legenda trasparente
+)
 st.plotly_chart(fig_line, use_container_width=True)
 
 col1, col2 = st.columns(2)
@@ -126,8 +139,17 @@ with col1:
         names=['Capitale Versato', 'Interessi Netti'],
         color_discrete_sequence=['#007aff', '#34c759']
     )
-    fig_pie.update_traces(marker=dict(line=dict(color='#000000', width=2)))
-    fig_pie.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    # Contorno torta adattivo
+    pie_border_color = "#ffffff" if tema == "Scuro" else "#000000"
+    fig_pie.update_traces(marker=dict(line=dict(color=pie_border_color, width=2)))
+    
+    # Gestione dinamica tema grafico a torta
+    fig_pie.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color=plot_text_color,
+        legend=dict(bgcolor="rgba(0,0,0,0)")
+    )
     st.plotly_chart(fig_pie, use_container_width=True)
 
 with col2:
@@ -148,9 +170,6 @@ with col2:
 st.subheader("Andamento Anno per Anno")
 
 df_display = df.copy()
-
-# Impostiamo esplicitamente l'Anno come indice della tabella. 
-# Questo rimuove la colonna "0, 1, 2..." fastidiosa e rende la tabella molto più pulita.
 df_display.set_index("Anno", inplace=True)
 
 for col in ["Versato", "V. Netto", "Potere Acq."]:
